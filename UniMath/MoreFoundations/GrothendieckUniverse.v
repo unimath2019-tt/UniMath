@@ -40,6 +40,42 @@ Definition decode : nat -> hSet.
   - exact (setcoprod unitset IH).
 Defined.
 
+(* A series of lemmas that we will need for the main theorem *)
+Lemma equal_carrier_equal_hset {A B : hSet} : (pr1 A = pr1 B) →  A = B.
+Proof.
+  intros H; destruct A, B; apply total2_paths2_f with H; apply isapropisaset.
+Defined.
+
+Lemma bool_decode : setcoprod unitset unitset = boolset.
+Proof.
+  apply equal_carrier_equal_hset; exact (weqtopaths boolascoprod).
+Defined.
+
+
+Definition sigma_encode (a : nat) (b : decode a → nat) : nat.
+  induction a.
+  - exact 0.
+  - exact (b (inl tt) + IHa (fun x => b (inr x))).
+Qed.
+
+Definition iterated_coprod (a : nat) (b : decode a → UU) : UU.
+  induction a.
+  - exact empty.
+  - exact (b (inl tt) ⨿ IHa (fun x => b (inr x))).
+Qed.
+
+Definition finite_sigma_as_coprod (a : nat) (b : decode a -> UU) :
+  (∑ (x : decode a), b x) = iterated_coprod a b.
+Proof.
+Admitted.
+
+Lemma sigma_decode (a : nat) (b : decode a → nat) :
+  decode (sigma_encode a b) = (∑ (c : decode a), decode (b c))%set.
+Proof.
+  apply equal_carrier_equal_hset; exact (weqtopaths boolascoprod).
+Defined.
+
+
 Theorem hereditarily_finite : is_guniverse (natset ,, decode).
 Proof.
 Admitted.
