@@ -55,6 +55,19 @@ Proof.
   - rewrite (weqtopaths (weqcoprodasstor _ _ _)), IHa; auto.
 Defined.
 
+Lemma decode_times (a b : nat) :
+  (decode a × decode b) = decode (a * b).
+Proof.
+  induction a; simpl in *.
+  - apply weqtopaths; apply weqtoempty; destruct 1; auto.
+  - rewrite (weqtopaths (weqdirprodcomm _ _)).
+    rewrite (weqtopaths (weqrdistrtocoprod _ _ _)).
+    rewrite (pathsinv0 (weqtopaths (weqtodirprodwithunit _))).
+    rewrite (weqtopaths (weqdirprodcomm _ _)).
+    rewrite natpluscomm, IHa, decode_plus.
+    auto.
+Defined.
+
 Lemma bool_decode : setcoprod unitset unitset = boolset.
 Proof.
   apply equal_carrier_equal_hset; exact (weqtopaths boolascoprod).
@@ -99,6 +112,54 @@ Proof.
   rewrite (sigma_encode_iterated_coprod a b), finite_sigma_as_coprod.
   auto.
 Defined.
+
+Definition pi_encode (a : nat) (b : decode a → nat) : nat.
+  induction a.
+  - exact 1.
+  - exact (b (inl tt) * IHa (fun x => b (inr x))).
+Defined.
+
+Definition iterated_prod (a : nat) (b : decode a → UU) : UU.
+  induction a.
+  - exact unit.
+  - exact (b (inl tt) × IHa (fun x => b (inr x))).
+Defined.
+
+Lemma pi_encode_iterated_prod (a : nat) (b : decode a → nat) :
+  (decode (pi_encode a b) : UU) = iterated_prod a (fun x => decode (b x)).
+Proof.
+  induction a; simpl.
+  - symmetry; apply weqtopaths; refine (inl ,, isweqii1withneg _ _); auto.
+  - simpl in *. rewrite (pathsinv0 (IHa _)), decode_times; auto.
+Defined.
+
+Definition iscontr_empty (X : ∅ → UU) :
+  iscontr  (∏ (a : ∅), X a).
+Proof.
+  exists fromemptysec; intros. apply funextsec. unfold homotsec. intros; contradiction.
+Qed.
+
+
+Definition finite_pi_as_prod (a : nat) (b : decode a -> UU) :
+  (∏ (x : decode a), b x) = iterated_prod a b.
+Proof.
+  induction a; simpl in *.
+  - apply weqtopaths. apply weqcontrtounit. apply iscontr_empty.
+  - rewrite
+      (weqtopaths (weqsecovercoprodtoprod _)),
+      (weqtopaths (weqsecoverunit _)),
+      (IHa (fun x => b (inr x))).
+    auto.
+Defined.
+
+Lemma pi_decode (a : nat) (b : decode a → nat) :
+  decode (pi_encode a b) = (∏ (c : decode a), decode (b c))%set.
+Proof.
+  apply equal_carrier_equal_hset. simpl.
+  rewrite (pi_encode_iterated_prod a b), finite_pi_as_prod.
+  auto.
+Defined.
+
 
 Theorem hereditarily_finite : is_guniverse (natset ,, decode).
 Proof.
