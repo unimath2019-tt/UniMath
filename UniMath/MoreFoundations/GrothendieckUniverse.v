@@ -6,9 +6,9 @@ Require Import UniMath.Foundations.All.
 Require Import UniMath.MoreFoundations.Tactics.
 Require Import UniMath.MoreFoundations.PartA.
 
-Definition pre_guniverse : UU := ∑ (A : UU), A → hSet.
-Definition pr1GUni : pre_guniverse -> UU := @pr1 UU _.
-Coercion pr1GUni: pre_guniverse >-> UU.
+Definition pre_guniverse : UU := ∑ (A : hSet), A → hSet.
+Definition pr1GUni : pre_guniverse -> hSet := @pr1 hSet _.
+Coercion pr1GUni: pre_guniverse >-> hSet.
 Definition El {A : pre_guniverse} : A → hSet := (pr2 A).
 
 Theorem emptyisaset : isaset empty.
@@ -25,9 +25,21 @@ Definition guniverse_sigma (A : pre_guniverse) : UU :=
 Definition guniverse_pi (A : pre_guniverse) : UU :=
   ∏ (a : A) (b : El a → A),
     ∑ (p : A), El p  = (∏ (x : El a), El (b x))%set.
-Definition guniverse : UU :=
-  ∑ (A : pre_guniverse),
+
+Definition is_guniverse (A : pre_guniverse) : UU :=
   guniverse_bool A ×
   guniverse_empty A ×
   guniverse_sigma A ×
   guniverse_pi A.
+Definition guniverse : UU :=
+  ∑ (A : pre_guniverse), is_guniverse A.
+
+Definition decode : nat -> hSet.
+  induction 1 as [|_ IH].
+  - exact emptyset.
+  - exact (setcoprod unitset IH).
+Defined.
+
+Theorem hereditarily_finite : is_guniverse (natset ,, decode).
+Proof.
+Admitted.
