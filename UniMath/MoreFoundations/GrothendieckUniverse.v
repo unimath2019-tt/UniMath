@@ -12,7 +12,7 @@ Coercion pr1GUni: pre_guniverse >-> hSet.
 Definition El {A : pre_guniverse} : A → hSet := (pr2 A).
 
 Theorem emptyisaset : isaset empty.
-Proof. intros a. contradiction. Qed.
+Proof. intros a. contradiction. Defined.
 Definition emptyset : hSet := hSetpair empty emptyisaset.
 
 Definition guniverse_bool (A : pre_guniverse) :=
@@ -40,10 +40,19 @@ Definition decode : nat -> hSet.
   - exact (setcoprod unitset IH).
 Defined.
 
+
 (* A series of lemmas that we will need for the main theorem *)
-Lemma equal_carrier_equal_hset {A B : hSet} : (pr1 A = pr1 B) →  A = B.
+Lemma equal_carrier_equal_hset {A B : hSet} : (A : UU) = (B : UU) → A = B.
 Proof.
   intros H; destruct A, B; apply total2_paths2_f with H; apply isapropisaset.
+Defined.
+
+Lemma decode_plus (a b : nat) :
+  decode a ⨿ decode b = decode (a + b).
+Proof.
+  induction a; simpl in *.
+  - symmetry. apply weqtopaths; refine (_ ,, isweqii2withneg _ _); auto.
+  - rewrite (weqtopaths (weqcoprodasstor _ _ _)), IHa; auto.
 Defined.
 
 Lemma bool_decode : setcoprod unitset unitset = boolset.
@@ -51,30 +60,45 @@ Proof.
   apply equal_carrier_equal_hset; exact (weqtopaths boolascoprod).
 Defined.
 
-
 Definition sigma_encode (a : nat) (b : decode a → nat) : nat.
   induction a.
   - exact 0.
   - exact (b (inl tt) + IHa (fun x => b (inr x))).
-Qed.
+Defined.
 
 Definition iterated_coprod (a : nat) (b : decode a → UU) : UU.
   induction a.
   - exact empty.
   - exact (b (inl tt) ⨿ IHa (fun x => b (inr x))).
-Qed.
+Defined.
+
+Lemma sigma_encode_iterated_coprod (a : nat) (b : decode a → nat) :
+  (decode (sigma_encode a b) : UU) = iterated_coprod a (fun x => decode (b x)).
+Proof.
+  induction a.
+  - auto.
+  - simpl in *. rewrite (pathsinv0 (IHa _)), decode_plus; auto.
+Defined.
 
 Definition finite_sigma_as_coprod (a : nat) (b : decode a -> UU) :
   (∑ (x : decode a), b x) = iterated_coprod a b.
 Proof.
-Admitted.
+  induction a; simpl in *.
+  - apply weqtopaths. apply weqtoempty. exact pr1.
+  - rewrite
+      (weqtopaths (weqtotal2overcoprod b)),
+      (weqtopaths (weqtotal2overunit (fun x => b (inl x)))),
+      (IHa (fun x => b (inr x))).
+    auto.
+Defined.
 
 Lemma sigma_decode (a : nat) (b : decode a → nat) :
   decode (sigma_encode a b) = (∑ (c : decode a), decode (b c))%set.
 Proof.
-  apply equal_carrier_equal_hset; exact (weqtopaths boolascoprod).
+  apply equal_carrier_equal_hset. simpl.
+  rewrite (sigma_encode_iterated_coprod a b), finite_sigma_as_coprod.
+  auto.
 Defined.
-
 
 Theorem hereditarily_finite : is_guniverse (natset ,, decode).
 Proof.
