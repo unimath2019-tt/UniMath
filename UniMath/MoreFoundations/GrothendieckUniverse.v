@@ -68,9 +68,12 @@ Proof.
     auto.
 Defined.
 
-Lemma bool_decode : setcoprod unitset unitset = boolset.
+Lemma bool_decode : setcoprod unitset (setcoprod unitset emptyset) = boolset.
 Proof.
-  apply equal_carrier_equal_hset; exact (weqtopaths boolascoprod).
+  apply equal_carrier_equal_hset; simpl.
+  rewrite (pathsinv0 (weqtopaths (weqcoprodasstor _ _ _))).
+  rewrite (weqtopaths boolascoprod).
+  symmetry; apply weqtopaths; refine (inl ,, isweqii1withneg _ _); auto.
 Defined.
 
 Definition sigma_encode (a : nat) (b : decode a → nat) : nat.
@@ -163,4 +166,9 @@ Defined.
 
 Theorem hereditarily_finite : is_guniverse (natset ,, decode).
 Proof.
-Admitted.
+  repeat split.
+  - exact (2 ,, bool_decode).
+  - exists 0; auto.
+  - intros a b. exists (sigma_encode a b); simpl; apply sigma_decode.
+  - intros a b. exists (pi_encode a b); simpl; apply pi_decode.
+Defined.
