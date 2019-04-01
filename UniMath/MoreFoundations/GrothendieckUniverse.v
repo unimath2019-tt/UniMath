@@ -164,7 +164,7 @@ Proof.
 Defined.
 
 
-Theorem hereditarily_finite : is_guniverse (natset ,, decode).
+Theorem nat_is_set_of_finite_sets : is_guniverse (natset ,, decode).
 Proof.
   repeat split.
   - exact (2 ,, bool_decode).
