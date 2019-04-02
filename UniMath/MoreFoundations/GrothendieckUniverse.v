@@ -35,7 +35,7 @@ Definition guniverse : UU :=
   ∑ (A : pre_guniverse), is_guniverse A.
 
 Section nat_grothendieck_universe.
-  Definition decode : nat -> hSet.
+  Definition decode_nat : nat -> hSet.
     induction 1 as [|_ IH].
     - exact emptyset.
     - exact (setcoprod unitset IH).
@@ -47,16 +47,16 @@ Section nat_grothendieck_universe.
     intros H; destruct A, B; apply total2_paths2_f with H; apply isapropisaset.
   Defined.
 
-  Lemma decode_plus (a b : nat) :
-    decode a ⨿ decode b = decode (a + b).
+  Lemma decode_nat_plus (a b : nat) :
+    decode_nat a ⨿ decode_nat b = decode_nat (a + b).
   Proof.
     induction a; simpl in *.
     - symmetry. apply weqtopaths; refine (_ ,, isweqii2withneg _ _); auto.
     - rewrite (weqtopaths (weqcoprodasstor _ _ _)), IHa; auto.
   Defined.
 
-  Lemma decode_times (a b : nat) :
-    (decode a × decode b) = decode (a * b).
+  Lemma decode_nat_times (a b : nat) :
+    (decode_nat a × decode_nat b) = decode_nat (a * b).
   Proof.
     induction a; simpl in *.
     - apply weqtopaths; apply weqtoempty; destruct 1; auto.
@@ -64,11 +64,11 @@ Section nat_grothendieck_universe.
       rewrite (weqtopaths (weqrdistrtocoprod _ _ _)).
       rewrite (pathsinv0 (weqtopaths (weqtodirprodwithunit _))).
       rewrite (weqtopaths (weqdirprodcomm _ _)).
-      rewrite natpluscomm, IHa, decode_plus.
+      rewrite natpluscomm, IHa, decode_nat_plus.
       auto.
   Defined.
 
-  Lemma bool_decode : setcoprod unitset (setcoprod unitset emptyset) = boolset.
+  Lemma bool_decode_nat : setcoprod unitset (setcoprod unitset emptyset) = boolset.
   Proof.
     apply equal_carrier_equal_hset; simpl.
     rewrite (pathsinv0 (weqtopaths (weqcoprodasstor _ _ _))).
@@ -76,28 +76,28 @@ Section nat_grothendieck_universe.
     symmetry; apply weqtopaths; refine (inl ,, isweqii1withneg _ _); auto.
   Defined.
 
-  Definition sigma_encode (a : nat) (b : decode a → nat) : nat.
+  Definition sigma_encode (a : nat) (b : decode_nat a → nat) : nat.
     induction a.
     - exact 0.
     - exact (b (inl tt) + IHa (fun x => b (inr x))).
   Defined.
 
-  Definition iterated_coprod (a : nat) (b : decode a → UU) : UU.
+  Definition iterated_coprod (a : nat) (b : decode_nat a → UU) : UU.
     induction a.
     - exact empty.
     - exact (b (inl tt) ⨿ IHa (fun x => b (inr x))).
   Defined.
 
-  Lemma sigma_encode_iterated_coprod (a : nat) (b : decode a → nat) :
-    (decode (sigma_encode a b) : UU) = iterated_coprod a (fun x => decode (b x)).
+  Lemma sigma_encode_iterated_coprod (a : nat) (b : decode_nat a → nat) :
+    (decode_nat (sigma_encode a b) : UU) = iterated_coprod a (fun x => decode_nat (b x)).
   Proof.
     induction a.
     - auto.
-    - simpl in *. rewrite (pathsinv0 (IHa _)), decode_plus; auto.
+    - simpl in *. rewrite (pathsinv0 (IHa _)), decode_nat_plus; auto.
   Defined.
 
-  Definition finite_sigma_as_coprod (a : nat) (b : decode a -> UU) :
-    (∑ (x : decode a), b x) = iterated_coprod a b.
+  Definition finite_sigma_as_coprod (a : nat) (b : decode_nat a -> UU) :
+    (∑ (x : decode_nat a), b x) = iterated_coprod a b.
   Proof.
     induction a; simpl in *.
     - apply weqtopaths. apply weqtoempty. exact pr1.
@@ -108,32 +108,32 @@ Section nat_grothendieck_universe.
       auto.
   Defined.
 
-  Lemma sigma_decode (a : nat) (b : decode a → nat) :
-    decode (sigma_encode a b) = (∑ (c : decode a), decode (b c))%set.
+  Lemma sigma_decode_nat (a : nat) (b : decode_nat a → nat) :
+    decode_nat (sigma_encode a b) = (∑ (c : decode_nat a), decode_nat (b c))%set.
   Proof.
     apply equal_carrier_equal_hset. simpl.
     rewrite (sigma_encode_iterated_coprod a b), finite_sigma_as_coprod.
     auto.
   Defined.
 
-  Definition pi_encode (a : nat) (b : decode a → nat) : nat.
+  Definition pi_encode (a : nat) (b : decode_nat a → nat) : nat.
     induction a.
     - exact 1.
     - exact (b (inl tt) * IHa (fun x => b (inr x))).
   Defined.
 
-  Definition iterated_prod (a : nat) (b : decode a → UU) : UU.
+  Definition iterated_prod (a : nat) (b : decode_nat a → UU) : UU.
     induction a.
     - exact unit.
     - exact (b (inl tt) × IHa (fun x => b (inr x))).
   Defined.
 
-  Lemma pi_encode_iterated_prod (a : nat) (b : decode a → nat) :
-    (decode (pi_encode a b) : UU) = iterated_prod a (fun x => decode (b x)).
+  Lemma pi_encode_iterated_prod (a : nat) (b : decode_nat a → nat) :
+    (decode_nat (pi_encode a b) : UU) = iterated_prod a (fun x => decode_nat (b x)).
   Proof.
     induction a; simpl.
     - symmetry; apply weqtopaths; refine (inl ,, isweqii1withneg _ _); auto.
-    - simpl in *. rewrite (pathsinv0 (IHa _)), decode_times; auto.
+    - simpl in *. rewrite (pathsinv0 (IHa _)), decode_nat_times; auto.
   Defined.
 
   Definition iscontr_empty (X : ∅ → UU) :
@@ -143,8 +143,8 @@ Section nat_grothendieck_universe.
   Qed.
 
 
-  Definition finite_pi_as_prod (a : nat) (b : decode a -> UU) :
-    (∏ (x : decode a), b x) = iterated_prod a b.
+  Definition finite_pi_as_prod (a : nat) (b : decode_nat a -> UU) :
+    (∏ (x : decode_nat a), b x) = iterated_prod a b.
   Proof.
     induction a; simpl in *.
     - apply weqtopaths. apply weqcontrtounit. apply iscontr_empty.
@@ -155,8 +155,8 @@ Section nat_grothendieck_universe.
       auto.
   Defined.
 
-  Lemma pi_decode (a : nat) (b : decode a → nat) :
-    decode (pi_encode a b) = (∏ (c : decode a), decode (b c))%set.
+  Lemma pi_decode_nat (a : nat) (b : decode_nat a → nat) :
+    decode_nat (pi_encode a b) = (∏ (c : decode_nat a), decode_nat (b c))%set.
   Proof.
     apply equal_carrier_equal_hset. simpl.
     rewrite (pi_encode_iterated_prod a b), finite_pi_as_prod.
@@ -164,13 +164,13 @@ Section nat_grothendieck_universe.
   Defined.
 
 
-  Theorem nat_is_set_of_finite_sets : is_guniverse (natset ,, decode).
+  Theorem nat_is_set_of_finite_sets : is_guniverse (natset ,, decode_nat).
   Proof.
     repeat split.
-    - exact (2 ,, bool_decode).
+    - exact (2 ,, bool_decode_nat).
     - exists 0; auto.
-    - intros a b. exists (sigma_encode a b); simpl; apply sigma_decode.
-    - intros a b. exists (pi_encode a b); simpl; apply pi_decode.
+    - intros a b. exists (sigma_encode a b); simpl; apply sigma_decode_nat.
+    - intros a b. exists (pi_encode a b); simpl; apply pi_decode_nat.
   Defined.
 End nat_grothendieck_universe.
 
@@ -268,4 +268,14 @@ Section ordinal_grothendieck_universe.
     | Lim => natset
     end.
 
+  Definition ord : hSet := (W (ord_lbl ,, ord_lbl_isaset) ord_lbl_fun ,, W_isaset _ _).
+
+  Definition decode_ord : ord → hSet.
+  Proof.
+    intro o; induction o as [lbl f IH].
+    induction lbl; simpl in *.
+    - exact emptyset.
+    - exact (setcoprod unitset (IH tt)).
+    - exact ((∑ (n : nat), IH n) ,, isaset_total2_hSet natset IH).
+  Defined.
 End ordinal_grothendieck_universe.
