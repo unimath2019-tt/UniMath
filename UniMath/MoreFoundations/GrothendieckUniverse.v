@@ -34,12 +34,12 @@ Definition is_guniverse (A : pre_guniverse) : UU :=
 Definition guniverse : UU :=
   ∑ (A : pre_guniverse), is_guniverse A.
 
+Section nat_grothendieck_universe.
 Definition decode : nat -> hSet.
   induction 1 as [|_ IH].
   - exact emptyset.
   - exact (setcoprod unitset IH).
 Defined.
-
 
 (* A series of lemmas that we will need for the main theorem *)
 Lemma equal_carrier_equal_hset {A B : hSet} : (A : UU) = (B : UU) → A = B.
@@ -172,3 +172,4 @@ Proof.
   - intros a b. exists (sigma_encode a b); simpl; apply sigma_decode.
   - intros a b. exists (pi_encode a b); simpl; apply pi_decode.
 Defined.
+End nat_grothendieck_universe.
