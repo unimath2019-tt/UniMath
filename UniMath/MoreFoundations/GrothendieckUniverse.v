@@ -270,6 +270,13 @@ Section ordinal_grothendieck_universe.
 
   Definition ord : hSet := (W (ord_lbl ,, ord_lbl_isaset) ord_lbl_fun ,, W_isaset _ _).
 
+  (* This is weird -- the limit case should decode to the LIMIT of a series of types.
+   * In our case here, this does not happen because we just take the disjoint union.
+   * This means that lim(1, 1, 1...) = ω, not 1. Fixing this is non-obvious, it might
+   * be easier to pick a structure that admits an easier decoding (essentially renaming
+   * ord to something else). We should look for inspiration in relevant literature before
+   * making a decision however.
+   *)
   Definition decode_ord : ord → hSet.
   Proof.
     intro o; induction o as [lbl f IH].
