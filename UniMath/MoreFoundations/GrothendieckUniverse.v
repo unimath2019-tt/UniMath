@@ -299,6 +299,118 @@ Section gylterud_grothendieck_universe.
     auto.
   Defined.
 
+  Definition M_eq : M → M → UU.
+  Proof.
+    intros m1; induction m1 as [A ElA IH].
+    intros m2; induction m2 as [B ElB _].
+    exact (∑ (p : A = B), ∏ (x : B), IH (transportb _ p x) (ElB x)).
+  Defined.
+
+  Definition M_eq_char :
+    ∏ (m1 m2 : M), m1 = m2 ≃ M_eq m1 m2.
+  Proof.
+    intros m1; induction m1 as [A ElA IH].
+    intros m2; induction m2 as [B ElB _].
+    apply (weqcomp supequalf).
+    simpl M_eq.
+    apply weqfibtototal.
+    intro p.
+    apply weqonsecfibers.
+    intro b.
+    unfold transportb; induction p; simpl.
+    do 2 rewrite idpath_transportf.
+    apply IH.
+  Defined.
+
+  Definition forward {A B C : UU} {f : A → C} {g : B → C} :
+    (∑ (p : A → B), homotsec f (g ∘ p))
+      →
+    (∏ (c : C), hfiber f c → hfiber g c).
+  Proof.
+    intros [p h] c [a q]. exists (p a). exact ((! (h a)) @ q).
+  Defined.
+
+  Definition backward {A B C : UU} {f : A → C} {g : B → C} :
+    (∏ (c : C), hfiber f c → hfiber g c)
+      →
+    (∑ (p : A → B), homotsec f (g ∘ p)).
+  Proof.
+    intros F.
+    set (p := fun a => pr1 (F (f a) (a ,, idpath _))).
+    set (h := fun a => ! (pr2 (F (f a) (a ,, idpath _)))).
+    set (x := @tpair _ (fun p => homotsec f (g ∘ p)) p h).
+    exact x.
+  Defined.
+
+  Lemma forwardbackward {A B C : UU} (f : A → C) (g : B → C) :
+    ∏ (x : ∑ (p : A → B), homotsec f (g ∘ p)), backward (forward x) = x.
+  Proof.
+    intros x.
+    induction x as [p h].
+    unfold forward, backward.
+    simpl.
+    apply (total2_paths2_f (idpath _)).
+    apply funextsec. intros a.
+    rewrite idpath_transportf.
+    rewrite pathscomp0rid.
+    rewrite pathsinv0inv0.
+    auto.
+  Defined.
+
+  Lemma backwardforward {A B C : UU} (f : A → C) (g : B → C) :
+    ∏ (x : ∏ (c : C), hfiber f c → hfiber g c), forward (backward x) = x.
+  Proof.
+    intros F.
+    unfold forward, backward.
+    simpl.
+    apply funextsec. intros c.
+    apply funextsec. intros [a p].
+    simpl.
+    rewrite pathsinv0inv0.
+    induction p.
+    rewrite pathscomp0rid.
+    auto.
+  Defined.
+
+  Lemma forward_isaweq A B C f g:
+    isweq (@forward A B C f g).
+  Proof.
+    apply (isweq_iso forward backward).
+    apply forwardbackward.
+    apply backwardforward.
+  Defined.
+
+  Lemma fib_weq {A B C : UU} (f : A → C) (g : B → C) :
+    (∑ (p : A = B), homotsec f (g ∘ (transportf _ p)))
+      ≃
+    (∏ (c : C), hfiber f c ≃ hfiber g c).
+  Proof.
+    use tpair.
+    - intros [p h] c.
+      set (w := weqhfibersgwtog ((transportf _ p ,, isweqtransportf (fun x => x)  p) : A ≃ B) g c).
+      refine (weqcomp _ w).
+      apply weqhfibershomot.
+      auto.
+    - simpl.
+  Admitted.
+
+  (*   assert ((∏ (c : C), hfiber f c ≃ hfiber (g ∘ transportf _ p) c) ≃ (∏ (c : C), hfiber f c ≃ hfiber g c)) as w1. *)
+  (*   rewrite weqhfibershomot *)
+
+
+
+  (* Qed. *)
+
+  Definition M_extensional :
+    ∏ (m1 m2 : M), m1 = m2 ≃ ∏ (m : M), memberM m m1 ≃ memberM m m2.
+  Proof.
+    intros m1; induction m1 as [A ElA IH].
+    intros m2; induction m2 as [B ElB _].
+    apply (weqcomp (M_eq_char _ _)).
+    simpl.
+
+    change memberM with hfiber.
+
   Definition itset (m : M) : hProp.
   Proof.
     induction m as [A El IH].
