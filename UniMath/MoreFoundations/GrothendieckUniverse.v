@@ -380,13 +380,131 @@ Section gylterud_grothendieck_universe.
     apply backwardforward.
   Defined.
 
+  Lemma homot_transportfb (A B : UU) (p : A = B) :
+    (fun x => x) = (transportf (λ x : UU, x) p ∘ transportb (λ x : UU, x) p).
+  Proof.
+    apply funextfun.
+    intro x.
+    unfold funcomp; simpl.
+    rewrite transportfbinv; auto.
+  Defined.
+
+  Lemma natural_homot {A B} {f g : A → B} {x y : A} :
+    ∏ (p : x = y)(α : homotsec f g),
+    α x @ maponpaths g p = maponpaths f p @ α y.
+  Proof.
+    intros p α.
+    induction p.
+    simpl.
+    rewrite pathscomp0rid.
+    auto.
+  Defined.
+
+  Definition forward' {A B C : UU} {f : A → C} {g : B → C} :
+    (∑ (p : A ≃ B), homotsec f (g ∘ p))
+      →
+    (∏ (c : C), hfiber f c ≃ hfiber g c).
+  Proof.
+    intros [p α] c.
+    exists (forward ((p : A → B) ,, α) c).
+    use gradth.
+    - intros [b q].
+      set (β := homotweqinv f p g α).
+      exact (invmap p b ,, β b @ q).
+    - simpl.
+      intros [a q].
+      apply (total2_paths2_f (homotinvweqweq p a)).
+      induction q.
+      rewrite pathscomp0rid.
+      apply (@transport_fun_path _ _ f (fun x => f a)).
+      rewrite maponpaths_for_constant_function.
+      do 2 rewrite pathscomp0rid.
+      unfold homotweqinv.
+      apply hornRotation.
+      rewrite pathsinv0inv0.
+      rewrite <- homotweqinvweqweq.
+      rewrite (maponpathscomp p g).
+      apply (natural_homot (homotinvweqweq p a) α).
+    - simpl; intros [b q].
+      unfold forward; simpl.
+      apply (total2_paths2_f (homotweqinvweq p b)).
+      induction q.
+      rewrite pathscomp0rid.
+      apply (@transport_fun_path _ _ g (fun x => g b)).
+      rewrite maponpaths_for_constant_function.
+      do 2 rewrite pathscomp0rid.
+      unfold homotweqinv.
+      rewrite path_assoc.
+      rewrite (pathsinv0l (α (invmap p b))) .
+      auto.
+  Defined.
+
   Lemma fib_weq {A B C : UU} (f : A → C) (g : B → C) :
-    (∑ (p : A = B), homotsec f (g ∘ (transportf _ p)))
+    (∑ (p : A ≃ B), homotsec f (g ∘ p))
       ≃
     (∏ (c : C), hfiber f c ≃ hfiber g c).
   Proof.
     use tpair.
-    - intros [p h] c.
+    - intros [p hom] c.
+      exists (forward ((p : A → B) ,, hom) c).
+      set (hom' := funhomotsec (invmap p) (invhomot hom)).
+      set (cancel := invhomot (homotweqinv (g ∘ p) p g (homotrefl _))).
+      apply (isweq_iso _ (forward (pr1 (invweq p),, homotcomp cancel hom') c)).
+      * intros [a q].
+        induction q.
+        simpl.
+        unfold forward; simpl.
+        rewrite pathscomp0rid.
+        apply (total2_paths2_f (homotinvweqweq p a)).
+        induction (homotinvweqweq p a).
+        rewrite <-pathscomp_inv.
+        rewrite transportf_id1.
+        induction q.
+        induction (homotinvweqweq p a).
+        unfold homotcomp.
+
+        rewrite path_assoc.
+        unfold hom', cancel.
+        simpl.
+
+
+
+
+        unfold homotcomp, invhomot, homotrefl, homotweqinv, funhomotsec, homotweqinvweq.
+        simpl.
+
+        do 2 (rewrite pathsinv0inv0).
+
+
+        unfold homotcomp.
+
+        induction q.
+        rewrite pathscomp0rid.
+
+        unfold hom'.
+        simpl.
+        unfold funhomotsec.
+        unfold invhomot.
+
+
+
+
+    - simpl.
+      intros F.
+
+      * intros [a q].
+        unfold forward; simpl.
+        induction p; unfold transportb; simpl.
+        unfold idfun. unfold transportf; simpl.
+        repeat unfold idfun.
+        apply (total2_paths2_f (idpath _)).
+        rewrite idpath_transportf.
+
+         in basePath. (fun x => x) a).
+
+
+
+      intros [p h] c.
       set (w := weqhfibersgwtog ((transportf _ p ,, isweqtransportf (fun x => x)  p) : A ≃ B) g c).
       refine (weqcomp _ w).
       apply weqhfibershomot.
