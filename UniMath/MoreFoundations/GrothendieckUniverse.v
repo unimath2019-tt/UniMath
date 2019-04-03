@@ -174,7 +174,15 @@ Section nat_grothendieck_universe.
   Defined.
 End nat_grothendieck_universe.
 
-Section ordinal_grothendieck_universe.
+(* A construction of Gylterud's V universe from
+ *   From Multisets to Sets in Homotopy Type Theory
+ * October 9 2018
+ *)
+Section gylterud_grothendieck_universe.
+
+  (* For now, we will define this as an inductive. Later we may attempt
+   * to remove this and postulate/construct it manually
+   *)
   Inductive W (A : hSet) (B : A → hSet) : UU :=
   | sup : ∏ (a : A), (B a → W A B) → W A B.
   Arguments sup {_} {_} _ _.
@@ -187,15 +195,6 @@ Section ordinal_grothendieck_universe.
     match w with
     | sup a b => b
     end.
-
-
-  (* Definition prjfun {A B} a (w : W A B) (p : a = prjlbl w) : (B a → W A B). *)
-  (* Proof. *)
-  (*   intros c; apply (transportf B p) in c. *)
-  (*   destruct w as [a' b]. *)
-  (*   simpl in *. *)
-  (*   exact (b c). *)
-  (* Defined. *)
 
   Definition W_unfolding (A : hSet) (B : A → hSet):
     W A B ≃ (∑ (a : A), B a → W A B).
@@ -214,6 +213,11 @@ Section ordinal_grothendieck_universe.
         auto.
   Defined.
 
+
+  (* It is unclear if we will require these next two lemmas lemmas at the end of the day.
+   * This follows
+   *  https://homotopytypetheory.org/2012/09/21/positive-h-levels-are-closed-under-w/
+   *)
   Definition supequalf
     {A : hSet} {B : A → hSet} {a a' : A} {b : B a → W A B} {b' : B a' → W A B} :
     (sup a b = sup a' b') ≃
@@ -252,37 +256,4 @@ Section ordinal_grothendieck_universe.
     apply IH.
   Defined.
 
-  Inductive ord_lbl : UU := Zero | Suc | Lim.
-  Lemma ord_lbl_isaset : isaset ord_lbl.
-  Proof.
-    apply isasetifdeceq.
-    intros l l'.
-    induction l; induction l';
-      ((left; reflexivity) || right; intro H; inversion H).
-  Defined.
-
-  Definition ord_lbl_fun (l : ord_lbl) : hSet :=
-    match l with
-    | Zero => emptyset
-    | Suc => unitset
-    | Lim => natset
-    end.
-
-  Definition ord : hSet := (W (ord_lbl ,, ord_lbl_isaset) ord_lbl_fun ,, W_isaset _ _).
-
-  (* This is weird -- the limit case should decode to the LIMIT of a series of types.
-   * In our case here, this does not happen because we just take the disjoint union.
-   * This means that lim(1, 1, 1...) = ω, not 1. Fixing this is non-obvious, it might
-   * be easier to pick a structure that admits an easier decoding (essentially renaming
-   * ord to something else). We should look for inspiration in relevant literature before
-   * making a decision however.
-   *)
-  Definition decode_ord : ord → hSet.
-  Proof.
-    intro o; induction o as [lbl f IH].
-    induction lbl; simpl in *.
-    - exact emptyset.
-    - exact (setcoprod unitset (IH tt)).
-    - exact ((∑ (n : nat), IH n) ,, isaset_total2_hSet natset IH).
-  Defined.
-End ordinal_grothendieck_universe.
+End gylterud_grothendieck_universe.
