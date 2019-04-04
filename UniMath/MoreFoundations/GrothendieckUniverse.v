@@ -660,113 +660,31 @@ Section gylterud_grothendieck_universe.
   Defined.
 
   (* The universe of sets *)
-  Definition V : UU :=  ∑ (m : M), itset m.
+  (* In the paper the use itset here, should be equivalent *)
+  Definition V : UU :=  ∑ (m : M), ∏ (m' : M), isaprop (memberM m' m).
 
+  Definition V_eq_char (v1 v2 : V) :
+    v1 = v2 ≃ (pr1 v1 = pr1 v2).
+  Proof.
+    apply subtypeInjectivity; intros m.
+    apply impred_isaprop.
+    intros m'.
+    apply isapropisaprop.
+  Defined.
+
+  Definition memberV (v1 v2 : V) := memberM (pr1 v1) (pr1 v2).
   Definition V_isaset : isaset V.
   Proof.
-
-
-Definition isembedding {A B : UU} (f : A → B) : UU :=
-  ∏ (x y : A), isweq (@maponpaths A B f x y).
-
-
-Inductive M : UU :=
-  sup : ∏ (A : UU) (f : A → M), M.
-
-Definition memberM (x y : M) : UU.
-Proof.
-destruct y as [a f].
-use total2.
-- apply a.
-- intros i.
-  exact (f i = x).
-Defined.
-
-Definition itset (x : M) : UU.
-Proof.
-induction x as [a f H].
-apply dirprod.
-apply (isembedding f).
-apply (∏ (i : a), H i).
-Defined.
-
-Lemma isaprop_itset (x : M) : isaprop (itset x).
-Proof.
-induction x as [a f H]; simpl.
-apply isapropdirprod.
-- apply isaprop_isembedding.
-- apply impred; intro i; apply H.
-Qed.
-
-Definition itset_predicate (x : M) : hProp :=
-  (itset x,,isaprop_itset x).
-
-Definition V : UU := ∑ (x : M), itset x.
-
-Lemma V_eq (x y : V) : (x = y) ≃ (pr1 x = pr1 y).
-Proof.
-now apply subtypeInjectivity; intros X; apply isaprop_itset.
-Qed.
-
-Lemma isasetV : isaset V.
-Admitted.
-
-Lemma asdf (A : UU) (f : A → M) (h : itset (sup A f)) : isaset A.
-Proof.
-intros x y.
-induction h as [h1 h2].
-apply (isofhlevelweqb _ (_,,h1 x y)).
-exact (isofhlevelweqf 1 (V_eq _ _) (isasetV (f x,,h2 x) (f y,,h2 y))).
-Qed.
-
-(* Definition Vprecategory : precategory. *)
-(* Proof. *)
-(* use mk_precategory. *)
-(* - use tpair. *)
-(*   + use (V,,_). *)
-(*     intros x y. *)
-(*     induction (pr1 x) as [a f _]. *)
-(*     induction (pr1 y) as [b g _]. *)
-(*     apply (a → b). *)
-(*   + split; simpl. *)
-(*     * intros x. *)
-(*       induction (pr1 x) as [a f _]; cbn. *)
-(*       apply idfun. *)
-(*     * intros x y z. *)
-(*       induction (pr1 x) as [a f _]. *)
-(*       induction (pr1 y) as [b g _]. *)
-(*       induction (pr1 z) as [c h _]; cbn. *)
-(*       intros F G w; apply (G (F w)). *)
-(* - repeat split; simpl. *)
-(*   + intros x y; cbn. *)
-(*     now induction (pr1 x); induction (pr1 y). *)
-(*   + intros x y; cbn. *)
-(*     now induction (pr1 x); induction (pr1 y). *)
-(*   + intros x y z w; cbn. *)
-(*     induction (pr1 x); induction (pr1 y); induction (pr1 z); induction (pr1 w). *)
-(*     now intros; apply funextfun. *)
-(* Defined. *)
-
-(* Lemma has_homsets_Vprecategory : has_homsets Vprecategory. *)
-(* Proof. *)
-(* intros [x1 x2] [y1 y2]. *)
-(* cbn. *)
-(* induction y1 as [b g _]. *)
-(* induction x1 as [a f _]. *)
-(* simpl. *)
-(* apply impred_isaset; intros x. *)
-(* apply (asdf _ g y2). *)
-(* Qed. *)
-
-(* Lemma InitialV : Initial Vprecategory. *)
-(* Proof. *)
-(* use mk_Initial. *)
-(* - use tpair. *)
-(*   + now apply (sup ∅). *)
-(*   + now split; intros x. *)
-(* - intros x; cbn. *)
-(*   induction (pr1 x); cbn. *)
-(*   now apply impred_iscontr. *)
-(* Defined. *)
+    intros v1 v2.
+    rewrite (weqtopaths (V_eq_char v1 v2)).
+    rewrite (weqtopaths (M_extensional (pr1 v1) (pr1 v2))).
+    apply impred.
+    intros m.
+    apply isapropweqfromprop.
+    induction v1 as [m1 prop1].
+    induction m1 as [A ElA].
+    simpl in prop1.
+    apply prop1.
+  Defined.
 
 End gylterud_grothendieck_universe.
