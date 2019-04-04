@@ -439,6 +439,21 @@ Section gylterud_grothendieck_universe.
       auto.
   Defined.
 
+  Definition transportf_on_hfiber {A B} {f : A → B} {a : A} {b : B} :
+    ∏ (p : f a = b), transportf (hfiber f) p (a ,, idpath _) = (a ,, p).
+  Proof.
+    intros p; induction p.
+    rewrite idpath_transportf.
+    auto.
+  Defined.
+
+  Lemma transportf_fun'' {A : UU} {P Q : A → UU} {a1 a2 : A} (f : P a1 → Q a1) (p : a1 = a2) (x : P a2)  :
+    transportf (fun x => P x → Q x) p f x =
+    transportf Q p (f (transportb P p x)).
+  Proof.
+    induction p; auto.
+  Defined.
+
   Definition backwards' {A B C : UU} {f : A → C} {g : B → C} :
     (∏ (c : C), hfiber f c ≃ hfiber g c)
       →
@@ -453,30 +468,23 @@ Section gylterud_grothendieck_universe.
       simpl.
       set (p := pr2 ((F (f a)) (a,, idpath (f a)))).
       simpl in p.
-      assert (F (f a) = transportf (fun x => hfiber f x ≃ hfiber g x) p (F (g (pr1 ((F (f a)) (a,, idpath (f a))))))) as same_equiv.
-      { rewrite p.
-        rewrite idpath_transportf.
-        auto. }
-      assert (F (f a) (a,, idpath (f a)) =
-
-      rewrite X.
-      destruct (F (f a) (a ,, idpath (f a))) as [b q].
-      simpl.
-
-
-      assert (∏ (c : C) (x : hfiber g c), F (g (pr1 x)) = x) as proj.
-      { intros c x; apply (pr2 x). }
-      rewrite (proj (f a) ((F (f a)) (a,, idpath (f a)))).
-
-      simpl in Hsimplify.
-
-
-      { apply ; auto. }
-
-
-      rewrite (pr2 ((F (f a)) (a,, idpath (f a)))); auto.
-
-
+      set (w := F (f a)) in *.
+      set (fib := w (a ,, idpath (f a))) in *.
+      assert (invmap (F (g (pr1 fib))) (pr1 fib,, idpath (g (pr1 fib))) =
+              transportf (hfiber f) (! p) (a,, idpath (f a))) as pp.
+      { set (q := (transport_section F (!p))).
+        rewrite <-q.
+        rewrite <-transport_invmap.
+        rewrite transportf_fun''.
+        unfold transportb; rewrite pathsinv0inv0.
+        rewrite (transportf_on_hfiber p).
+        change (pr1 fib,, p) with fib.
+        unfold fib, w.
+        rewrite (homotinvweqweq (F (f a))); auto. }
+      rewrite pp.
+      rewrite (transportf_on_hfiber (!p)).
+      auto.
+    -
   Defined.
 
   Lemma fib_weq {A B C : UU} (f : A → C) (g : B → C) :
