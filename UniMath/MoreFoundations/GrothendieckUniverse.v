@@ -1,7 +1,6 @@
 (* -*- coding: utf-8 *)
 
 (** * Grothendieck Universes *)
-(*Require Import Coq.Init.Prelude.*)
 Require Import UniMath.Foundations.All.
 Require Import UniMath.MoreFoundations.Tactics.
 Require Import UniMath.MoreFoundations.PartA.
@@ -213,11 +212,6 @@ Section gylterud_grothendieck_universe.
         auto.
   Defined.
 
-
-  (* It is unclear if we will require these next two lemmas lemmas at the end of the day.
-   * This follows
-   *  https://homotopytypetheory.org/2012/09/21/positive-h-levels-are-closed-under-w/
-   *)
   Definition supequalf
     {A} {B : A → UU} {a a' : A} {b : B a → W A B} {b' : B a' → W A B} :
     (sup a b = sup a' b') ≃
@@ -572,7 +566,6 @@ Section gylterud_grothendieck_universe.
     rewrite X.
     auto.
   Defined.
-
 
   Definition remove_hSet_equality {A B : hSet} (P : A = B → UU) :
     (∑ (p : A = B), P p)
