@@ -9,14 +9,30 @@ Require Import UniMath.CategoryTheory.Core.Isos.
 
 Local Open Scope cat.
 
+
+Lemma non_dep_transportf_trivial {A B: UU} {a a': A} (b: B) (p: a = a'):
+  transportf (λ x, B) p b = b.
+Proof.
+  induction p.
+  rewrite idpath_transportf.
+  reflexivity.
+Defined.
+
 Section WeakFactorisationSystem.
 
   Context (C: precategory).
 
   Definition class_mors := ∏(a b: C), hsubtype (C ⟦a,b⟧).
 
+  Definition comm_square {a b x y: C} (l: a --> b) (r: x --> y) :=
+    ∑(f: a --> x) (g: b --> y), r∘f = g∘l.
+
+  Definition lifting_to_comm_square {a b x y: C} (l: a --> b) (r: x --> y) :
+    C⟦b,x⟧ → comm_square l r :=
+    λ h, (h∘l,, r∘h,, assoc' l h r).
+
   Definition lifting {a b x y: C} (l: a --> b) (r: x --> y) :=
-    ∏(f: a --> x), ∏(g: b --> y), r∘f = g∘l -> ∑(h: b --> x), (h∘l = f) × (r∘h = g).
+    ∏(sq: comm_square l r), hfiber (lifting_to_comm_square l r) sq.
 
   Definition llp {a b: C} (l: a --> b) (R: class_mors ) :=
     ∏(x y: C), ∏(r : R x y), lifting l (pr1 r).
@@ -38,15 +54,25 @@ Section WeakFactorisationSystem.
       × (is_right_orth L R)
       × (is_factorization_system L R).
 
-  Lemma isos_llp {a b: C} (α: iso a b) : ∏(x y: C), ∏(f: x --> y), lifting α f.
+
+
+  Lemma isos_llp {hs: has_homsets C} {a b: C} (α: iso a b) : ∏(x y: C), ∏(f: x --> y), lifting α f.
   Proof.
-    intros x y f. intros X Y. intro p.
+    intros x y f. intros [X [Y p]].
     exists (X ∘ inv_from_iso α).
-    split.
-    - rewrite assoc, iso_inv_after_iso, id_left.
-      reflexivity.
-    - rewrite assoc'.  apply iso_inv_on_right.
-      exact p.
+    unfold lifting_to_comm_square.
+
+    eapply total2_paths2_f.
+    rewrite transportf_total2. simpl.
+    eapply total2_paths2_f.
+    apply hs.
+    Unshelve.
+    rewrite assoc, iso_inv_after_iso, id_left. reflexivity.
+    Unshelve.
+    {
+      rewrite (non_dep_transportf_trivial (inv_from_iso α · X · f) _).
+      rewrite assoc'. apply iso_inv_on_right. exact p.
+    }
   Defined.
 
   Lemma isos_rlp {x y: C} (α: iso x y) : ∏(a b: C), ∏(f: a --> b), lifting f α.
@@ -59,6 +85,10 @@ Section WeakFactorisationSystem.
     - rewrite assoc', iso_after_iso_inv, id_right.
       reflexivity.
   Defined.
+
+  Theorem has_homsets_implies_lifting_sets :
+    has_homsets C -> ∏(a b x y: C), ∏(l:a --> b), ∏(r: x --> y),
+    ∏(f: a --> x), ∏(g: b --> y), ∏(p: r∘f = g∘l), isaset().
 
 End WeakFactorisationSystem.
 
