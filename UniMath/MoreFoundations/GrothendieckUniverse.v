@@ -484,7 +484,25 @@ Section gylterud_grothendieck_universe.
       rewrite pp.
       rewrite (transportf_on_hfiber (!p)).
       auto.
-    -
+    - intros b.
+      simpl.
+      set (p := pr2 (invmap (F (g b)) (b ,, idpath (g b)))).
+      simpl in p.
+      set (w := invmap (F (g b))) in *.
+      set (fib := w (b ,, idpath (g b))) in *.
+      assert (F (f (pr1 fib)) (pr1 fib,, idpath (f (pr1 fib))) =
+              transportf (hfiber g) (! p) (b,, idpath (g b))) as pp.
+      { set (q := (transport_section (F : ∏ (c : C), _ → _) (!p))).
+        rewrite <-q.
+        rewrite transportf_fun''.
+        unfold transportb; rewrite pathsinv0inv0.
+        rewrite (transportf_on_hfiber p).
+        change (pr1 fib,, p) with fib.
+        unfold fib, w.
+        rewrite (homotweqinvweq (F (g b))); auto. }
+      rewrite pp.
+      rewrite (transportf_on_hfiber (!p)).
+      auto.
   Defined.
 
   Lemma fib_weq {A B C : UU} (f : A → C) (g : B → C) :
