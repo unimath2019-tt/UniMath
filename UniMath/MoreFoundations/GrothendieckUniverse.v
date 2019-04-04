@@ -698,4 +698,19 @@ Section gylterud_grothendieck_universe.
 
   Definition V_uni : pre_guniverse := ( (V ,, V_isaset) ,, decode_V).
 
+  Definition V_empty :
+    ∑ (v : V), decode_V v = emptyset.
+  Proof.
+    use tpair.
+    - exists (sup emptyset fromempty).
+      split; [|intros a; exact (fromempty a)].
+      unfold isincl, isofhlevelf. intros ? x x'.
+      induction x as [[] _ _].
+    - unfold decode_V; simpl.
+      use subtypeEquality.
+      * intros a; apply isapropisaset.
+      * apply weqtopaths; apply weqtoempty.
+        intros w; induction w; auto.
+  Defined.
+
 End gylterud_grothendieck_universe.
