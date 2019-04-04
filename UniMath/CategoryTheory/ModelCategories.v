@@ -75,16 +75,16 @@ Section WeakFactorisationSystem.
     }
   Defined.
 
-  Lemma isos_rlp {x y: C} (α: iso x y) : ∏(a b: C), ∏(f: a --> b), lifting f α.
-  Proof.
-    intros a b f. intros X Y. intro p.
-    exists (inv_from_iso α ∘ Y).
-    split.
-    - rewrite assoc. symmetry. apply iso_inv_on_left. symmetry.
-      exact p.
-    - rewrite assoc', iso_after_iso_inv, id_right.
-      reflexivity.
-  Defined.
+  (* Lemma isos_rlp {x y: C} (α: iso x y) : ∏(a b: C), ∏(f: a --> b), lifting f α. *)
+  (* Proof. *)
+  (*   intros a b f. intros X Y. intro p. *)
+  (*   exists (inv_from_iso α ∘ Y). *)
+  (*   split. *)
+  (*   - rewrite assoc. symmetry. apply iso_inv_on_left. symmetry. *)
+  (*     exact p. *)
+  (*   - rewrite assoc', iso_after_iso_inv, id_right. *)
+  (*     reflexivity. *)
+  (* Defined. *)
 
   Theorem has_homsets_implies_lifting_sets :
     has_homsets C -> ∏(a b x y: C), ∏(l:a --> b), ∏(r: x --> y),
