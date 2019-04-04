@@ -686,5 +686,16 @@ Section gylterud_grothendieck_universe.
     apply prop1.
   Defined.
 
+  Definition decode_V : V → hSet.
+  Proof.
+    induction 1 as [m _].
+    induction m as [A ElA IH].
+    refine ( (W A IH) ,, _).
+    apply W_isofhlevel.
+    - apply (pr2 A).
+    - intros a; apply (pr2 (IH a)).
+  Defined.
+
+  Definition V_uni : pre_guniverse := ( (V ,, V_isaset) ,, decode_V).
 
 End gylterud_grothendieck_universe.
