@@ -400,13 +400,9 @@ Section gylterud_grothendieck_universe.
     auto.
   Defined.
 
-  Definition forward' {A B C : UU} {f : A → C} {g : B → C} :
-    (∑ (p : A ≃ B), homotsec f (g ∘ p))
-      →
-    (∏ (c : C), hfiber f c ≃ hfiber g c).
+  Lemma abstracted_forward' {A B C : UU} {f : A → C} {g : B → C} {p : A ≃ B} (α : homotsec f (g ∘ p)) c :
+    isweq (forward (tpair (fun (p : A → B) => homotsec f (g ∘ p)) p α) c).
   Proof.
-    intros [p α] c.
-    exists (forward ((p : A → B) ,, α) c).
     use gradth.
     - intros [b q].
       set (β := homotweqinv f p g α).
@@ -437,6 +433,16 @@ Section gylterud_grothendieck_universe.
       rewrite path_assoc.
       rewrite (pathsinv0l (α (invmap p b))) .
       auto.
+  Qed.
+
+  Definition forward' {A B C : UU} {f : A → C} {g : B → C} :
+    (∑ (p : A ≃ B), homotsec f (g ∘ p))
+      →
+    (∏ (c : C), hfiber f c ≃ hfiber g c).
+  Proof.
+    intros [p α] c.
+    exists (forward ((p : A → B) ,, α) c).
+    apply abstracted_forward'.
   Defined.
 
   Definition transportf_on_hfiber {A B} {f : A → B} {a : A} {b : B} :
@@ -454,13 +460,11 @@ Section gylterud_grothendieck_universe.
     induction p; auto.
   Defined.
 
-  Definition backwards' {A B C : UU} {f : A → C} {g : B → C} :
-    (∏ (c : C), hfiber f c ≃ hfiber g c)
-      →
-    (∑ (p : A ≃ B), homotsec f (g ∘ p)).
+  Lemma abstracted_backwards' {A B C : UU} {f : A → C} {g : B → C} :
+    ∏ (F : ∏ c : C, hfiber f c ≃ hfiber g c),
+    isweq (pr1 (backward (λ c : C, F c))).
   Proof.
     intros F.
-    refine ((pr1 (backward F) ,, _) ,, pr2 (backward F)).
     use gradth.
     - intros b.
       exact (pr1 (invmap (F (g b)) (b ,, idpath _))).
@@ -503,6 +507,16 @@ Section gylterud_grothendieck_universe.
       rewrite pp.
       rewrite (transportf_on_hfiber (!p)).
       auto.
+  Qed.
+
+  Definition backwards' {A B C : UU} {f : A → C} {g : B → C} :
+    (∏ (c : C), hfiber f c ≃ hfiber g c)
+      →
+    (∑ (p : A ≃ B), homotsec f (g ∘ p)).
+  Proof.
+    intros F.
+    refine ((pr1 (backward F) ,, _) ,, pr2 (backward F)).
+    apply abstracted_backwards'.
   Defined.
 
   Lemma fib_weq {A B C : UU} (f : A → C) (g : B → C) :
@@ -510,80 +524,38 @@ Section gylterud_grothendieck_universe.
       ≃
     (∏ (c : C), hfiber f c ≃ hfiber g c).
   Proof.
-    use tpair.
-    - intros [p hom] c.
-      exists (forward ((p : A → B) ,, hom) c).
-      set (hom' := funhomotsec (invmap p) (invhomot hom)).
-      set (cancel := invhomot (homotweqinv (g ∘ p) p g (homotrefl _))).
-      apply (isweq_iso _ (forward (pr1 (invweq p),, homotcomp cancel hom') c)).
-      * intros [a q].
-        induction q.
+    exists forward'.
+    use gradth.
+    - exact backwards'.
+    - intros [[p isweq_p] α].
+      unfold backwards', forward'.
+      unfold pr1weq in *.
+      unfold pr1 in *.
+      change (λ c : C, forward (p,, α) c) with (forward (p,, α)).
+      set (x := abstracted_backwards' _).
+      assert (x = isweq_p).
+      { apply isapropisweq. }
+      rewrite X.
+      use total2_paths_f.
+      * auto.
+      * simpl. rewrite idpath_transportf.
+        apply funextsec.
+        intros a.
+        rewrite pathscomp_inv.
         simpl.
-        unfold forward; simpl.
-        rewrite pathscomp0rid.
-        apply (total2_paths2_f (homotinvweqweq p a)).
-        induction (homotinvweqweq p a).
-        rewrite <-pathscomp_inv.
-        rewrite transportf_id1.
-        induction q.
-        induction (homotinvweqweq p a).
-        unfold homotcomp.
-
-        rewrite path_assoc.
-        unfold hom', cancel.
-        simpl.
-
-
-
-
-        unfold homotcomp, invhomot, homotrefl, homotweqinv, funhomotsec, homotweqinvweq.
-        simpl.
-
-        do 2 (rewrite pathsinv0inv0).
-
-
-        unfold homotcomp.
-
-        induction q.
-        rewrite pathscomp0rid.
-
-        unfold hom'.
-        simpl.
-        unfold funhomotsec.
-        unfold invhomot.
-
-
-
-
-    - simpl.
-      intros F.
-
-      * intros [a q].
-        unfold forward; simpl.
-        induction p; unfold transportb; simpl.
-        unfold idfun. unfold transportf; simpl.
-        repeat unfold idfun.
-        apply (total2_paths2_f (idpath _)).
-        rewrite idpath_transportf.
-
-         in basePath. (fun x => x) a).
-
-
-
-      intros [p h] c.
-      set (w := weqhfibersgwtog ((transportf _ p ,, isweqtransportf (fun x => x)  p) : A ≃ B) g c).
-      refine (weqcomp _ w).
-      apply weqhfibershomot.
+        rewrite pathsinv0inv0.
+        auto.
+    - intros x.
+      unfold backwards', forward'.
+      unfold pr1weq in *.
+      unfold pr2, pr1.
+      apply funextsec.
+      intros c.
+      apply subtypeEquality; [intros a; apply isapropisweq|].
+      unfold pr1.
+      rewrite backwardforward.
       auto.
-    - simpl.
-  Admitted.
-
-  (*   assert ((∏ (c : C), hfiber f c ≃ hfiber (g ∘ transportf _ p) c) ≃ (∏ (c : C), hfiber f c ≃ hfiber g c)) as w1. *)
-  (*   rewrite weqhfibershomot *)
-
-
-
-  (* Qed. *)
+  Defined.
 
   Definition M_extensional :
     ∏ (m1 m2 : M), m1 = m2 ≃ ∏ (m : M), memberM m m1 ≃ memberM m m2.
