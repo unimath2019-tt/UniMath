@@ -44,7 +44,6 @@ Section nat_grothendieck_universe.
   (* A series of lemmas that we will need for the main theorem *)
   Lemma equal_carrier_equal_hset {A B : hSet} : (A : UU) = (B : UU) ≃ A = B.
   Proof.
-    (* Massive overkill *)
     rewrite (weqtopaths (hSet_univalence _ _)).
     apply univalence.
   Defined.
@@ -303,7 +302,7 @@ Section gylterud_grothendieck_universe.
   Proof.
     intros m1; induction m1 as [A ElA IH].
     intros m2; induction m2 as [B ElB _].
-    exact (∑ (p : A = B), ∏ (x : B), IH (transportb _ p x) (ElB x)).
+    exact (∑ (p : A = B), ∏ (x : B), IH (transportb (fun x => x) (base_paths _ _ p) x) (ElB x)).
   Defined.
 
   Definition M_eq_char :
@@ -557,6 +556,74 @@ Section gylterud_grothendieck_universe.
       auto.
   Defined.
 
+  Definition lift_equality_to_hSet {A B : hSet} : @paths UU A B → @paths hSet A B.
+  Proof.
+    intros p.
+    apply (total2_paths_f p).
+    apply isapropisaset.
+  Defined.
+
+  Lemma lift_equality_to_hSet_reduce {A B : hSet} (p : @paths UU A B) :
+    base_paths _ _ (lift_equality_to_hSet p) = p.
+  Proof.
+    unfold lift_equality_to_hSet.
+    apply base_total2_paths.
+  Defined.
+
+  Lemma lift_equality_to_hSet_eta {A B : hSet} (p : @paths hSet A B) :
+    lift_equality_to_hSet (base_paths A B p) = p.
+  Proof.
+    unfold lift_equality_to_hSet.
+    rewrite <-(total2_fiber_paths p).
+    rewrite base_total2_paths.
+    set (q := pr1 (isapropisaset (pr1 B) (transportf isaset (base_paths A B p) (pr2 A)) (pr2 B))).
+    assert (q = fiber_paths p).
+    { rewrite (pr2 (isapropisaset (pr1 B) (transportf isaset (base_paths A B p) (pr2 A)) (pr2 B))).
+      auto. }
+    rewrite X.
+    auto.
+  Defined.
+
+
+  Definition remove_hSet_equality {A B : hSet} (P : A = B → UU) :
+    (∑ (p : A = B), P p)
+      ≃
+    (∑ (p : (A : UU) = (B : UU)), P (lift_equality_to_hSet p)).
+  Proof.
+    unfold pr1hSet.
+    use weqtotal2.
+    - apply path_sigma_hprop.
+      apply isapropisaset.
+    - intros p; simpl.
+      rewrite lift_equality_to_hSet_eta.
+      apply idweq.
+  Defined.
+
+  Definition correct_equality_equivalence {A B : hSet} {C} (f : A → C) (g : B → C) (P : A = B → UU) :
+    (∏ (p : A = B), P p ≃ homotsec f (g ∘ transportf (fun x => x) (base_paths _ _ p))) →
+    (∑ (p : (A : UU) = (B : UU)), P (lift_equality_to_hSet p))
+      ≃
+    (∑ (p : A ≃ B), homotsec f (g ∘ p)).
+  Proof.
+    induction A as [A' A'_isaset].
+    induction B as [B' B'_isaset].
+    intros w.
+    use weqtotal2.
+    - apply univalence.
+    - intros q.
+      apply (weqcomp (w (lift_equality_to_hSet q))).
+      rewrite (lift_equality_to_hSet_reduce q).
+      simpl in *.
+      apply eqweqmap.
+      apply maponpaths.
+      apply funextfun.
+      intro a.
+      unfold funcomp.
+      apply maponpaths.
+      induction q.
+      now rewrite idpath_transportf.
+  Qed.
+
   Definition M_extensional :
     ∏ (m1 m2 : M), m1 = m2 ≃ ∏ (m : M), memberM m m1 ≃ memberM m m2.
   Proof.
@@ -564,8 +631,25 @@ Section gylterud_grothendieck_universe.
     intros m2; induction m2 as [B ElB _].
     apply (weqcomp (M_eq_char _ _)).
     simpl.
-
-    change memberM with hfiber.
+    set (P := fun (p : @paths hSet A B) => ∏ x : B, M_eq (ElA (transportb (λ x0 : UU, x0) (base_paths _ _ p) x)) (ElB x)).
+    apply (weqcomp (remove_hSet_equality P)).
+    rewrite (fun x => weqtopaths (correct_equality_equivalence ElA ElB P x)).
+    - apply fib_weq.
+    - intros p.
+      unfold P. clear P.
+      set (P := fun x => M_eq (ElA (transportb (λ x0 : UU, x0) (base_paths A B p) x)) (ElB x)).
+      set (w := tpair (fun f => isweq f) (transportf (fun x => x) (base_paths _ _ p)) (isweqtransportf (fun x => x) (base_paths _ _ p))).
+      apply (weqcomp (weqonsecbase P w)).
+      apply weqonsecfibers.
+      intros a.
+      unfold P.
+      apply (weqcomp (invweq (M_eq_char _ _))).
+      simpl.
+      rewrite transportbfinv.
+      unfold funcomp.
+      rewrite transportb_fun'.
+      apply idweq.
+  Defined.
 
   Definition itset (m : M) : hProp.
   Proof.
