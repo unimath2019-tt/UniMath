@@ -439,6 +439,46 @@ Section gylterud_grothendieck_universe.
       auto.
   Defined.
 
+  Definition backwards' {A B C : UU} {f : A → C} {g : B → C} :
+    (∏ (c : C), hfiber f c ≃ hfiber g c)
+      →
+    (∑ (p : A ≃ B), homotsec f (g ∘ p)).
+  Proof.
+    intros F.
+    refine ((pr1 (backward F) ,, _) ,, pr2 (backward F)).
+    use gradth.
+    - intros b.
+      exact (pr1 (invmap (F (g b)) (b ,, idpath _))).
+    - intros a.
+      simpl.
+      set (p := pr2 ((F (f a)) (a,, idpath (f a)))).
+      simpl in p.
+      assert (F (f a) = transportf (fun x => hfiber f x ≃ hfiber g x) p (F (g (pr1 ((F (f a)) (a,, idpath (f a))))))) as same_equiv.
+      { rewrite p.
+        rewrite idpath_transportf.
+        auto. }
+      assert (F (f a) (a,, idpath (f a)) =
+
+      rewrite X.
+      destruct (F (f a) (a ,, idpath (f a))) as [b q].
+      simpl.
+
+
+      assert (∏ (c : C) (x : hfiber g c), F (g (pr1 x)) = x) as proj.
+      { intros c x; apply (pr2 x). }
+      rewrite (proj (f a) ((F (f a)) (a,, idpath (f a)))).
+
+      simpl in Hsimplify.
+
+
+      { apply ; auto. }
+
+
+      rewrite (pr2 ((F (f a)) (a,, idpath (f a)))); auto.
+
+
+  Defined.
+
   Lemma fib_weq {A B C : UU} (f : A → C) (g : B → C) :
     (∑ (p : A ≃ B), homotsec f (g ∘ p))
       ≃
