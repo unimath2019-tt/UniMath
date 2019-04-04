@@ -257,17 +257,6 @@ Section gylterud_grothendieck_universe.
     apply IH.
   Defined.
 
-  Definition isembedding {A B} (f : A → B) : UU :=
-    ∏ (x y : A), isweq (@maponpaths _ _ f x y).
-
-  Lemma isaprop_isembedding {A B : UU} (f : A → B) :
-    isaprop (isembedding f).
-  Proof.
-    apply impred; intros x.
-    apply impred; intros y.
-    apply isapropisweq.
-  Qed.
-
   (* The type of multisets, NOT an hSet. *)
   Definition M : UU := W hSet (fun A => (A : UU)).
 
@@ -654,25 +643,34 @@ Section gylterud_grothendieck_universe.
   Definition itset (m : M) : hProp.
   Proof.
     induction m as [A El IH].
-    refine ((isembedding El × ∏ (a : A), IH a) ,, _).
-    apply isapropdirprod;
-      [apply isaprop_isembedding | apply impred; apply IH].
+    refine ((isincl El × ∏ (a : A), IH a) ,, _).
+    apply isapropdirprod; [| apply impred; apply IH].
+    unfold isincl, isofhlevelf. apply impred. intros t.
+    apply isapropisofhlevel.
   Defined.
 
   (* The universe of sets *)
-  (* In the paper the use itset here, should be equivalent *)
-  Definition V : UU :=  ∑ (m : M), ∏ (m' : M), isaprop (memberM m' m).
+  Definition V : UU :=  ∑ (m : M), itset m.
 
   Definition V_eq_char (v1 v2 : V) :
     v1 = v2 ≃ (pr1 v1 = pr1 v2).
   Proof.
     apply subtypeInjectivity; intros m.
-    apply impred_isaprop.
-    intros m'.
-    apply isapropisaprop.
+    apply (pr2 (itset m)).
   Defined.
 
   Definition memberV (v1 v2 : V) := memberM (pr1 v1) (pr1 v2).
+
+  Lemma itset_member_prop (m : M) :
+    itset m → (∏ (m' : M), isaprop (memberM m' m)).
+  Proof.
+    intros i.
+    induction m as [A ElA _].
+    induction i as [em children_itset].
+    intros m'.
+    apply em.
+  Defined.
+
   Definition V_isaset : isaset V.
   Proof.
     intros v1 v2.
@@ -683,8 +681,10 @@ Section gylterud_grothendieck_universe.
     apply isapropweqfromprop.
     induction v1 as [m1 prop1].
     induction m1 as [A ElA].
+    apply itset_member_prop.
     simpl in prop1.
     apply prop1.
   Defined.
+
 
 End gylterud_grothendieck_universe.
