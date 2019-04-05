@@ -637,9 +637,7 @@ Section gylterud_grothendieck_universe.
   Proof.
     induction m as [A El IH].
     refine ((isincl El × ∏ (a : A), IH a) ,, _).
-    apply isapropdirprod; [| apply impred; apply IH].
-    unfold isincl, isofhlevelf. apply impred. intros t.
-    apply isapropisofhlevel.
+    apply isapropdirprod; [apply isapropisincl | apply impred; apply IH].
   Defined.
 
   (* The universe of sets *)
@@ -681,29 +679,44 @@ Section gylterud_grothendieck_universe.
 
   Definition decode_V : V → hSet.
   Proof.
-    induction 1 as [m _].
+    intros v; induction v as [m _].
     induction m as [A ElA IH].
-    refine ( (W A IH) ,, _).
-    apply W_isofhlevel.
-    - apply (pr2 A).
-    - intros a; apply (pr2 (IH a)).
+    exact A.
   Defined.
 
-  Definition V_uni : pre_guniverse := ( (V ,, V_isaset) ,, decode_V).
+  Definition VV : hSet := (V ,, V_isaset).
+  Definition V_uni : pre_guniverse := (VV ,, decode_V).
+
+  Definition mk_V :
+    ∏ (A : hSet) (El : A → VV),
+    (∏ (a a' : A), El a = El a' → a = a') →
+    VV.
+  Proof.
+    intros A El inj.
+    exists (sup A (pr1 ∘ El)).
+    split.
+    - refine (isinclcomp (El ,, _) (pr1 ,, _)).
+      * apply isinclbetweensets; [apply (pr2 A) | apply (pr2 VV) | apply inj].
+      * apply isinclpr1carrier.
+    - intros a. exact (pr2 (El a)).
+  Defined.
 
   Definition V_empty :
     ∑ (v : V), decode_V v = emptyset.
   Proof.
     use tpair.
-    - exists (sup emptyset fromempty).
-      split; [|intros a; exact (fromempty a)].
-      unfold isincl, isofhlevelf. intros ? x x'.
-      induction x as [[] _ _].
-    - unfold decode_V; simpl.
-      use subtypeEquality.
-      * intros a; apply isapropisaset.
-      * apply weqtopaths; apply weqtoempty.
-        intros w; induction w; auto.
+    - apply (mk_V emptyset fromempty).
+      intros a; induction a.
+    - unfold decode_V; auto.
+  Defined.
+
+  Definition V_unit :
+    ∑ (v : V), decode_V v = unitset.
+  Proof.
+    use tpair.
+    - apply (mk_V unitset (fun _ => pr1 V_empty)).
+      intros a a' ?; apply isapropunit.
+    - unfold decode_V; auto.
   Defined.
 
 End gylterud_grothendieck_universe.
