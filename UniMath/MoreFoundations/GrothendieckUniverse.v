@@ -719,4 +719,20 @@ Section gylterud_grothendieck_universe.
     - unfold decode_V; auto.
   Defined.
 
+  Definition V_bool :
+    ∑ (v : V), decode_V v = boolset.
+  Proof.
+    use tpair.
+    - apply (mk_V boolset (fun b => if b then pr1 V_empty else pr1 V_unit)).
+      intros a a' p.
+      induction a; induction a'; auto.
+      * apply (maponpaths decode_V) in p.
+        unfold decode_V in p. simpl in p.
+        exact (fromempty (transportb (fun x => x) (maponpaths pr1 p) tt)).
+      * apply (maponpaths decode_V) in p.
+        unfold decode_V in p. simpl in p.
+        exact (fromempty (transportf (fun x => x) (maponpaths pr1 p) tt)).
+    - unfold decode_V; auto.
+  Defined.
+
 End gylterud_grothendieck_universe.
