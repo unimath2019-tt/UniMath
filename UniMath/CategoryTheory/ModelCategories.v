@@ -8,6 +8,8 @@ Require Import UniMath.MoreFoundations.Notations.
 Require Import UniMath.CategoryTheory.Core.Categories.
 Require Import UniMath.CategoryTheory.Core.Isos.
 Require Import UniMath.CategoryTheory.limits.products.
+Require Import UniMath.CategoryTheory.limits.binproducts.
+Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.limits.coproducts.
 Require Import UniMath.CategoryTheory.limits.pullbacks.
 Require Import UniMath.CategoryTheory.limits.pushouts.
@@ -155,7 +157,29 @@ Definition model_structure (C: precategory) :=
     × (is_weak_factorization_system (intersect Cof Weq) Fib)
     × (is_weak_factorization_system Cof (intersect Fib Weq)).
 
+Definition Weq (C: precategory) (S: model_structure C) := pr1 (pr2 C).
+Definition Cof (C: precategory) (S: model_structure C) := pr1 C.
+Definition Fib (C: precategory) (S: model_structure C) := pr1( pr2 (pr2 C)).
+
 Definition model_category :=
-  ∑(C: category), (∏(I:UU), (isfinite I) -> (hasProducts I C))
-                    × (∏(I:UU), (isfinite I) -> (hasCoproducts I C))
-                    × (model_structure C).
+  ∑(C: category), (BinProducts C) × (BinCoproducts C) × (model_structure C).
+
+Definition category_from_modelcat : model_category -> category :=
+  fun C => pr1 C.
+
+Coercion category_from_modelcat : model_category >-> category.
+
+Definition structure_from_modelcat : ∏(C: model_category), model_structure C :=
+  fun C => pr222 C.
+
+Coercion structure_from_modelcat : model_category >-> model_structure.
+
+Section Cylinders.
+
+  Context {C: model_category}.
+
+  Definition codiagonal (a: C) (aua: BinCoproduct C a a): aua --> a.
+    apply (pr2 aua). exact (identity a). exact (identity a).
+  Defined.
+
+End Cylinders.
